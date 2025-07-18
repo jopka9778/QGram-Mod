@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QGram - {{ chat.title }}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1e1e2d;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            display: flex;
+            width: 90%;
+            max-width: 1200px;
+            height: 80vh;
+            background-color: #2a2a3e;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border-radius: 12px;
+            overflow: hidden;
+            color: #d1d1d1;
+        }
+        .sidebar {
+            width: 350px;
+            background-color: #2a2a3e;
+            border-right: 1px solid #3b3b52;
+            padding: 25px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .sidebar-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .brand {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #6c5ce7;
+            margin-bottom: 10px;
+        }
+        .sidebar-header h2 {
+            margin: 0;
+            font-size: 1.5em;
+        }
+        .sidebar a {
+            display: block;
+            padding: 15px;
+            background-color: #6c5ce7;
+            color: #fff;
+            text-decoration: none;
+            text-align: center;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+        .sidebar a:hover {
+            background-color: #5d4acf;
+            transform: translateY(-2px);
+        }
+        .chat-main {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-header {
+            background-color: #3b3b52;
+            padding: 25px;
+            border-bottom: 1px solid #4c4c66;
+            text-align: center;
+            color: #d1d1d1;
+        }
+        .chat-header h3 {
+            margin: 0;
+        }
+        .message-list {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        .message {
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            max-width: 60%;
+            line-height: 1.5;
+            word-wrap: break-word;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .message-sender {
+            font-size: 0.9em;
+            font-weight: bold;
+            color: #6c5ce7;
+            margin-bottom: 5px;
+        }
+        .incoming {
+            background-color: #3b3b52;
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+        }
+        .outgoing {
+            background-color: #6c5ce7;
+            color: #fff;
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+        }
+        .message-timestamp {
+            font-size: 0.8em;
+            color: #a0a0a0;
+            display: block;
+            margin-top: 8px;
+            text-align: right;
+        }
+        .outgoing .message-timestamp {
+            color: #e0e0e0;
+        }
+        .message-form {
+            padding: 20px;
+            border-top: 1px solid #4c4c66;
+            background-color: #3b3b52;
+        }
+        .message-form form {
+            display: flex;
+            align-items: center;
+        }
+        .message-form input[type="text"] {
+            flex-grow: 1;
+            padding: 12px;
+            border: 1px solid #4c4c66;
+            border-radius: 8px;
+            margin-right: 10px;
+            background-color: #2a2a3e;
+            color: #d1d1d1;
+            transition: border-color 0.3s;
+        }
+        .message-form input[type="text"]:focus {
+            outline: none;
+            border-color: #6c5ce7;
+        }
+        .message-form button {
+            padding: 12px 20px;
+            border: none;
+            background-color: #6c5ce7;
+            color: #fff;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        .message-form button:hover {
+            background-color: #5d4acf;
+            transform: translateY(-2px);
+        }
+        .media-preview {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div>
+                <div class="sidebar-header">
+                    <span class="brand">QGram</span>
+                    <h2>{{ chat.title }}</h2>
+                </div>
+            </div>
+            <a href="/">Назад к чатам</a>
+        </div>
+        <div class="chat-main">
+            <div class="chat-header">
+                <h3>{{ chat.title }}</h3>
+            </div>
+            <div class="message-list" id="message-list">
+                {% for message in messages %}
+                    <div class="message {% if message.direction == 'incoming' %}incoming{% else %}outgoing{% endif %}" data-message-id="{{ message.id }}">
+                        {% if message.direction == 'incoming' and message.sender_name %}
+                            <div class="message-sender">{{ message.sender_name }}</div>
+                        {% endif %}
+                        {% if message.text %}
+                            <div>{{ message.text }}</div>
+                        {% endif %}
+                        {% if message.media_path %}
+                            {% if message.media_type == 'photo' %}
+                                <img src="/static/{{ message.media_path }}" alt="Изображение" class="media-preview">
+                            {% elif message.media_type == 'video' %}
+                                <video controls class="media-preview">
+                                    <source src="/static/{{ message.media_path }}" type="video/mp4">
+                                </video>
+                            {% endif %}
+                        {% endif %}
+                        <span class="message-timestamp">{{ message.timestamp.strftime('%H:%M') }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="message-form">
+                <form id="message-form" method="POST" enctype="multipart/form-data">
+                    <input type="text" name="text" placeholder="Введите сообщение..." autocomplete="off">
+                    <input type="file" name="media" id="media-file" style="display: none;">
+                    <label for="media-file" style="cursor: pointer; margin-right: 10px;">📎</label>
+                    <button type="submit">Отправить</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const messageList = document.getElementById('message-list');
+        const messageForm = document.getElementById('message-form');
+        const chat_id = "{{ chat.id }}";
+        let lastMessageId = 0;
+
+        // Инициализируем ID последнего сообщения при загрузке страницы
+        function initializeLastMessageId() {
+            const lastMessage = messageList.querySelector('.message:last-child');
+            if (lastMessage) {
+                lastMessageId = parseInt(lastMessage.dataset.messageId);
+            }
+        }
+        initializeLastMessageId();
+
+        // Прокрутка чата вниз
+        function scrollToBottom() {
+            messageList.scrollTop = messageList.scrollHeight;
+        }
+
+        // Создание HTML-элемента сообщения
+        function createMessageElement(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
+            messageDiv.dataset.messageId = message.id;
+            
+            if (message.direction === 'incoming') {
+                messageDiv.classList.add('incoming');
+                const senderDiv = document.createElement('div');
+                senderDiv.classList.add('message-sender');
+                senderDiv.textContent = message.sender_name || 'Неизвестный';
+                messageDiv.appendChild(senderDiv);
+            } else {
+                messageDiv.classList.add('outgoing');
+            }
+
+            if (message.text) {
+                const textDiv = document.createElement('div');
+                textDiv.textContent = message.text;
+                messageDiv.appendChild(textDiv);
+            }
+
+            if (message.media_path) {
+                if (message.media_type === 'photo') {
+                    const img = document.createElement('img');
+                    img.src = `/static/${message.media_path}`;
+                    img.alt = "Изображение";
+                    img.classList.add('media-preview');
+                    messageDiv.appendChild(img);
+                } else if (message.media_type === 'video') {
+                    const video = document.createElement('video');
+                    video.controls = true;
+                    video.classList.add('media-preview');
+                    const source = document.createElement('source');
+                    source.src = `/static/${message.media_path}`;
+                    source.type = "video/mp4";
+                    video.appendChild(source);
+                    messageDiv.appendChild(video);
+                }
+            }
+
+            const timestampSpan = document.createElement('span');
+            timestampSpan.classList.add('message-timestamp');
+            timestampSpan.textContent = message.timestamp;
+            messageDiv.appendChild(timestampSpan);
+
+            return messageDiv;
+        }
+
+        // Обработчик отправки сообщения (AJAX)
+        messageForm.addEventListener('submit', async function(event) {
+            event.preventDefault(); // <-- ЭТО САМАЯ ВАЖНАЯ СТРОКА! Она предотвращает перезагрузку страницы
+
+            const formData = new FormData(messageForm);
+            const textInput = messageForm.querySelector('input[name="text"]');
+
+            const tempMessage = {
+                text: textInput.value,
+                direction: 'outgoing',
+                timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+            };
+
+            const mediaFile = formData.get('media');
+            if (mediaFile && mediaFile.size > 0) {
+                tempMessage.media_path = URL.createObjectURL(mediaFile);
+                tempMessage.media_type = mediaFile.type.startsWith('video') ? 'video' : 'photo';
+            }
+
+            const tempMessageElement = createMessageElement(tempMessage);
+            messageList.appendChild(tempMessageElement);
+            scrollToBottom();
+
+            try {
+                const response = await fetch('', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.status === 'success') {
+                        textInput.value = '';
+                        document.getElementById('media-file').value = '';
+                    } else {
+                        console.error('Ошибка при отправке:', data.message);
+                    }
+                } else {
+                    console.error('Ошибка сервера:', response.statusText);
+                }
+            } catch (error) {
+                console.error('Произошла ошибка:', error);
+            }
+        });
+
+        // Функция для периодического обновления чата
+        async function fetchNewMessages() {
+            try {
+                const response = await fetch(`/api/chat/${chat_id}/updates?last_message_id=${lastMessageId}`);
+                if (response.ok) {
+                    const newMessages = await response.json();
+                    if (newMessages.length > 0) {
+                        const isAtBottom = messageList.scrollHeight - messageList.clientHeight <= messageList.scrollTop + 10;
+                        
+                        newMessages.forEach(msg => {
+                            const newMessageElement = createMessageElement(msg);
+                            messageList.appendChild(newMessageElement);
+                        });
+                        lastMessageId = newMessages[newMessages.length - 1].id;
+
+                        if (isAtBottom) {
+                            scrollToBottom();
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error("Не удалось получить обновления чата:", error);
+            }
+        }
+
+        // Запускаем автоматическое обновление каждые 3 секунды
+        setInterval(fetchNewMessages, 3000);
+
+        // Прокручиваем вниз при загрузке страницы, чтобы видеть последние сообщения
+        window.addEventListener('load', scrollToBottom);
+
+    </script>
+</body>
+</html>
