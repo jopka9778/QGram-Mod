@@ -11,7 +11,7 @@ import json
 import time
 
 # --- ВСТАВЬТЕ ВАШ ТОКЕН СЮДА ---
-BOT_TOKEN = "8011833222:AAEgIt-JCPQVZnAG0QvoFNb0Lo6sIWkZL_M"
+BOT_TOKEN = ""
 
 # Используем aiogram
 from aiogram import Bot, Dispatcher, types
