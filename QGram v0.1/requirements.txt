@@ -1,6 +1,0 @@
-Flask
-aiogram
-pyrogram
-SQLAlchemy
-customtkinter
-python-dotenv
